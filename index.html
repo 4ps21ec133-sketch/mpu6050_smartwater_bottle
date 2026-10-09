@@ -1,1805 +1,541 @@
+
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>Smart Water Bottle</title>
-
-
-    <style>
-
-        /* =====================================================
-           BASIC PAGE
-        ===================================================== */
-
-        * {
-            box-sizing: border-box;
-        }
-
-
-        body {
-
-            margin: 0;
-
-            padding: 20px;
-
-            font-family: Arial, sans-serif;
-
-            background: #eef7ff;
-
-            text-align: center;
-
-        }
-
-
-        .container {
-
-            max-width: 500px;
-
-            margin: auto;
-
-        }
-
-
-        /* =====================================================
-           TITLE
-        ===================================================== */
-
-        h1 {
-
-            color: #1565c0;
-
-            margin-bottom: 5px;
-
-        }
-
-
-        .subtitle {
-
-            color: #666;
-
-            margin-bottom: 25px;
-
-        }
-
-
-        /* =====================================================
-           CARD
-        ===================================================== */
-
-        .card {
-
-            background: white;
-
-            padding: 20px;
-
-            margin-bottom: 15px;
-
-            border-radius: 15px;
-
-            box-shadow:
-                0 4px 12px rgba(0,0,0,0.1);
-
-        }
-
-
-        /* =====================================================
-           CONNECT BUTTON
-        ===================================================== */
-
-        button {
-
-            width: 100%;
-
-            padding: 15px;
-
-            border: none;
-
-            border-radius: 10px;
-
-            background: #1565c0;
-
-            color: white;
-
-            font-size: 18px;
-
-            cursor: pointer;
-
-        }
-
-
-        button:active {
-
-            transform: scale(0.98);
-
-        }
-
-
-        button:disabled {
-
-            background: #999;
-
-        }
-
-
-        /* =====================================================
-           CONNECTION STATUS
-        ===================================================== */
-
-        #connectionStatus {
-
-            margin-top: 15px;
-
-            font-weight: bold;
-
-            color: #d32f2f;
-
-        }
-
-
-        /* =====================================================
-           CONNECTION DOT
-        ===================================================== */
-
-        .statusBox {
-
-            margin-top: 15px;
-
-            padding: 10px;
-
-            border-radius: 10px;
-
-            background: #f5f5f5;
-
-        }
-
-
-        .dot {
-
-            display: inline-block;
-
-            width: 12px;
-
-            height: 12px;
-
-            border-radius: 50%;
-
-            background: #d32f2f;
-
-            margin-right: 8px;
-
-        }
-
-
-        .dot.connected {
-
-            background: #2e7d32;
-
-        }
-
-
-        /* =====================================================
-           DRINK COUNT
-        ===================================================== */
-
-        .label {
-
-            color: #777;
-
-            font-size: 16px;
-
-        }
-
-
-        .count {
-
-            font-size: 60px;
-
-            font-weight: bold;
-
-            color: #1565c0;
-
-            margin-top: 5px;
-
-        }
-
-
-        /* =====================================================
-           SENSOR VALUES
-        ===================================================== */
-
-        .sensorRow {
-
-            display: flex;
-
-            justify-content: space-between;
-
-            gap: 10px;
-
-            margin-top: 15px;
-
-        }
-
-
-        .sensor {
-
-            flex: 1;
-
-            background: #f5f9ff;
-
-            padding: 15px 5px;
-
-            border-radius: 10px;
-
-        }
-
-
-        .sensorTitle {
-
-            font-size: 14px;
-
-            color: #777;
-
-        }
-
-
-        .sensorValue {
-
-            font-size: 23px;
-
-            font-weight: bold;
-
-            color: #1565c0;
-
-            margin-top: 5px;
-
-        }
-
-
-        /* =====================================================
-           STATUS
-        ===================================================== */
-
-        #status {
-
-            font-size: 20px;
-
-            font-weight: bold;
-
-        }
-
-
-        .normal {
-
-            color: #2e7d32;
-
-        }
-
-
-        .drinkStatus {
-
-            color: #1565c0;
-
-        }
-
-
-        .moving {
-
-            color: #f57c00;
-
-        }
-
-
-        /* =====================================================
-           DRINK DETECTED
-        ===================================================== */
-
-        .drink {
-
-            display: none;
-
-            background: #d4edda;
-
-            color: #155724;
-
-            padding: 20px;
-
-            border-radius: 15px;
-
-            margin-bottom: 15px;
-
-            font-size: 20px;
-
-            font-weight: bold;
-
-            animation: blink 1s infinite alternate;
-
-        }
-
-
-        @keyframes blink {
-
-            from {
-
-                opacity: 0.6;
-
-            }
-
-            to {
-
-                opacity: 1;
-
-            }
-
-        }
-
-
-        /* =====================================================
-           WATER REMINDER
-        ===================================================== */
-
-        .reminder {
-
-            display: none;
-
-            background: #fff3cd;
-
-            color: #856404;
-
-            padding: 20px;
-
-            border-radius: 15px;
-
-            margin-bottom: 15px;
-
-            font-size: 22px;
-
-            font-weight: bold;
-
-            animation: blink 1s infinite alternate;
-
-        }
-
-
-        /* =====================================================
-           TIMER
-        ===================================================== */
-
-        .timer {
-
-            font-size: 24px;
-
-            font-weight: bold;
-
-            color: #1565c0;
-
-            margin-top: 10px;
-
-        }
-
-
-        .timerText {
-
-            color: #777;
-
-            font-size: 14px;
-
-        }
-
-
-        /* =====================================================
-           RAW BLUETOOTH DATA
-        ===================================================== */
-
-        .raw {
-
-            background: #eeeeee;
-
-            padding: 12px;
-
-            border-radius: 8px;
-
-            word-break: break-word;
-
-            font-size: 13px;
-
-            text-align: left;
-
-            min-height: 50px;
-
-        }
-
-
-        /* =====================================================
-           MESSAGE HISTORY
-        ===================================================== */
-
-        #messageHistory {
-
-            max-height: 200px;
-
-            overflow-y: auto;
-
-            text-align: left;
-
-            font-size: 13px;
-
-        }
-
-
-        .historyItem {
-
-            background: #f5f5f5;
-
-            padding: 8px;
-
-            margin-bottom: 5px;
-
-            border-radius: 6px;
-
-        }
-
-
-        /* =====================================================
-           INFORMATION
-        ===================================================== */
-
-        .info {
-
-            color: #666;
-
-            font-size: 13px;
-
-            line-height: 1.5;
-
-        }
-
-
-    </style>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#071421">
+<title>ESP32 BLE Connection Test</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  background: #071421;
+  color: #eaf4ff;
+  font-family: Arial, sans-serif;
+}
+
+.container {
+  max-width: 850px;
+  margin: auto;
+}
+
+h1 {
+  text-align: center;
+  color: #50e3c2;
+}
+
+.subtitle {
+  text-align: center;
+  color: #a8bacd;
+  margin-bottom: 25px;
+}
+
+.panel {
+  background: #102336;
+  border: 1px solid #294258;
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+.status {
+  padding: 12px;
+  border-radius: 8px;
+  background: #26364a;
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 15px;
+  overflow-wrap: anywhere;
+}
+
+.connected {
+  color: #50e3c2;
+}
+
+.disconnected {
+  color: #ff7777;
+}
+
+button {
+  width: 100%;
+  border: none;
+  border-radius: 9px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 5px 0;
+}
+
+#connectButton {
+  background: #50e3c2;
+  color: #071421;
+}
+
+#disconnectButton {
+  background: #ff7777;
+  color: #071421;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.item {
+  background: #172e43;
+  border-radius: 10px;
+  padding: 14px;
+  min-width: 0;
+}
+
+.label {
+  font-size: 13px;
+  color: #a8bacd;
+  margin-bottom: 9px;
+}
+
+.value {
+  color: #50e3c2;
+  font-size: 21px;
+  font-weight: bold;
+  overflow-wrap: anywhere;
+}
+
+#rawData {
+  background: #06101b;
+  border-radius: 8px;
+  padding: 12px;
+  min-height: 90px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: #c5f8e9;
+  font-family: monospace;
+  font-size: 13px;
+}
+
+#log {
+  background: #06101b;
+  border-radius: 8px;
+  padding: 12px;
+  min-height: 65px;
+  max-height: 180px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: monospace;
+  font-size: 12px;
+  color: #b7c9dc;
+}
+
+.note {
+  color: #a8bacd;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 12px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .value {
+    font-size: 17px;
+  }
+}
+</style>
 </head>
 
-
 <body>
-
-
 <div class="container">
 
+  <h1>ESP32 BLE Monitor</h1>
+  <p class="subtitle">Water Quality + Smart Bottle</p>
 
-    <!-- =====================================================
-         TITLE
-    ===================================================== -->
-
-    <h1>💧 Smart Water Bottle</h1>
-
-    <div class="subtitle">
-
-        MPU6050 + HC-05
-
+  <div class="panel">
+    <div id="status" class="status disconnected">
+      DISCONNECTED
     </div>
 
+    <button id="connectButton">CONNECT TO ESP32</button>
+    <button id="disconnectButton" disabled>DISCONNECT</button>
 
-    <!-- =====================================================
-         BLUETOOTH CONNECTION
-    ===================================================== -->
+    <p class="note">
+      Device name: Water Quality Monitor<br>
+      Protocol: Bluetooth Low Energy (BLE)
+    </p>
+  </div>
 
-    <div class="card">
+  <div class="panel">
+    <h3>Water Quality Readings</h3>
+    <div class="grid">
+      <div class="item">
+        <div class="label">TDS</div>
+        <div class="value" id="tds">--</div>
+      </div>
 
-        <button
-            id="connectButton"
-            onclick="connectBluetooth()">
+      <div class="item">
+        <div class="label">Turbidity ADC</div>
+        <div class="value" id="turbidity">--</div>
+      </div>
 
-            CONNECT BLUETOOTH
+      <div class="item">
+        <div class="label">Temperature</div>
+        <div class="value" id="temperature">--</div>
+      </div>
 
-        </button>
-
-
-        <div class="statusBox">
-
-            <span
-                id="connectionDot"
-                class="dot">
-            </span>
-
-
-            <span id="connectionStatus">
-
-                Not Connected
-
-            </span>
-
-        </div>
-
+      <div class="item">
+        <div class="label">Water Quality</div>
+        <div class="value" id="quality">--</div>
+      </div>
     </div>
+  </div>
 
+  <div class="panel">
+    <h3>MPU6050 Readings</h3>
+    <div class="grid">
+      <div class="item">
+        <div class="label">X Axis</div>
+        <div class="value" id="axisX">--</div>
+      </div>
 
-    <!-- =====================================================
-         WATER DRINKING COUNT
-    ===================================================== -->
+      <div class="item">
+        <div class="label">Y Axis</div>
+        <div class="value" id="axisY">--</div>
+      </div>
 
-    <div class="card">
+      <div class="item">
+        <div class="label">Z Axis</div>
+        <div class="value" id="axisZ">--</div>
+      </div>
 
-        <div class="label">
+      <div class="item">
+        <div class="label">Drink Count</div>
+        <div class="value" id="drinks">--</div>
+      </div>
 
-            Water Drinking Count
+      <div class="item">
+        <div class="label">Bottle Status</div>
+        <div class="value" id="bottleStatus">--</div>
+      </div>
 
-        </div>
-
-
-        <div
-            id="drinkCount"
-            class="count">
-
-            0
-
-        </div>
-
+      <div class="item">
+        <div class="label">Water Reminder</div>
+        <div class="value" id="reminder">--</div>
+      </div>
     </div>
-
-
-    <!-- =====================================================
-         DRINK DETECTED MESSAGE
-    ===================================================== -->
-
-    <div
-        id="drinkMessage"
-        class="drink">
-
-        💧 WATER DRINKING DETECTED!
-
-        <br>
-
-        <small>
-
-            Drink count updated
-
-        </small>
-
-    </div>
-
-
-    <!-- =====================================================
-         WATER REMINDER
-    ===================================================== -->
-
-    <div
-        id="reminderMessage"
-        class="reminder">
-
-        🔔 DRINK WATER
-
-        <br>
-
-        <small>
-
-            It is time to drink water!
-
-        </small>
-
-    </div>
-
-
-    <!-- =====================================================
-         MPU6050
-    ===================================================== -->
-
-    <div class="card">
-
-        <h3>
-
-            MPU6050 Data
-
-        </h3>
-
-
-        <div class="sensorRow">
-
-
-            <div class="sensor">
-
-                <div class="sensorTitle">
-
-                    X Angle
-
-                </div>
-
-                <div
-                    id="angleX"
-                    class="sensorValue">
-
-                    0°
-
-                </div>
-
-            </div>
-
-
-            <div class="sensor">
-
-                <div class="sensorTitle">
-
-                    Y Angle
-
-                </div>
-
-                <div
-                    id="angleY"
-                    class="sensorValue">
-
-                    0°
-
-                </div>
-
-            </div>
-
-
-            <div class="sensor">
-
-                <div class="sensorTitle">
-
-                    Z Angle
-
-                </div>
-
-                <div
-                    id="angleZ"
-                    class="sensorValue">
-
-                    0°
-
-                </div>
-
-            </div>
-
-
-        </div>
-
-
-        <div class="value">
-
-            Status:
-
-            <strong id="status">
-
-                Waiting
-
-            </strong>
-
-        </div>
-
-
-    </div>
-
-
-    <!-- =====================================================
-         30 MINUTE TIMER
-    ===================================================== -->
-
-    <div class="card">
-
-        <h3>
-
-            ⏱ Water Reminder
-
-        </h3>
-
-
-        <div class="timerText">
-
-            Next reminder
-
-        </div>
-
-
-        <div
-            id="timer"
-            class="timer">
-
-            30:00
-
-        </div>
-
-
-    </div>
-
-
-    <!-- =====================================================
-         BLUETOOTH DATA
-    ===================================================== -->
-
-    <div class="card">
-
-        <h3>
-
-            Bluetooth Data
-
-        </h3>
-
-
-        <div
-            id="rawData"
-            class="raw">
-
-            Waiting for data...
-
-        </div>
-
-    </div>
-
-
-    <!-- =====================================================
-         MESSAGE HISTORY
-    ===================================================== -->
-
-    <div class="card">
-
-        <h3>
-
-            Bluetooth History
-
-        </h3>
-
-
-        <div id="messageHistory">
-
-            No messages yet.
-
-        </div>
-
-    </div>
-
-
-    <!-- =====================================================
-         INFORMATION
-    ===================================================== -->
-
-    <div class="card info">
-
-        <b>Arduino → HC-05</b>
-
-        <br>
-
-        COUNT, X, Y, Z and STATUS are received from the
-        Arduino.
-
-        <br><br>
-
-        The Arduino sends:
-
-        <br>
-
-        <b>
-            COUNT:x,X:x,Y:x,Z:x,STATUS:x
-        </b>
-
-        <br><br>
-
-        Every 30 minutes:
-
-        <br>
-
-        <b>
-            REMINDER:DRINK WATER
-        </b>
-
-    </div>
-
+  </div>
+
+  <div class="panel">
+    <h3>Latest Bluetooth Message</h3>
+    <div id="rawData">Waiting for BLE data...</div>
+  </div>
+
+  <div class="panel">
+    <h3>Connection Log</h3>
+    <div id="log">Website ready.</div>
+  </div>
 
 </div>
 
-
 <script>
+"use strict";
 
+// ==========================================
+// ESP32 BLE UUIDS
+// ==========================================
 
-/* =========================================================
-   VARIABLES
-   ========================================================= */
+const SERVICE_UUID =
+  "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 
+const TX_UUID =
+  "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
 
-let bluetoothConnected = false;
+// ==========================================
+// VARIABLES
+// ==========================================
 
+let bleDevice = null;
+let txCharacteristic = null;
 
-/*
-   We keep track of the last drink count.
+const connectButton =
+  document.getElementById("connectButton");
 
-   This prevents the same DRINK message from
-   showing the notification repeatedly.
-*/
+const disconnectButton =
+  document.getElementById("disconnectButton");
 
-let previousDrinkCount = 0;
+const statusBox =
+  document.getElementById("status");
 
+const rawData =
+  document.getElementById("rawData");
 
-/*
-   30 minute timer
+const logBox =
+  document.getElementById("log");
 
-   30 minutes = 1800 seconds
-*/
+// ==========================================
+// LOG MESSAGE
+// ==========================================
 
-const REMINDER_SECONDS = 30 * 60;
+function log(message) {
+  const time = new Date().toLocaleTimeString();
 
-let remainingSeconds = REMINDER_SECONDS;
+  logBox.textContent +=
+    "\n[" + time + "] " + message;
 
-
-/*
-   Timer interval
-*/
-
-let timerInterval = null;
-
-
-/* =========================================================
-   CONNECT BLUETOOTH
-   ========================================================= */
-
-function connectBluetooth()
-{
-
-    /*
-       HC-05 is Bluetooth Classic.
-
-       A normal GitHub Pages website cannot directly
-       access HC-05.
-
-       Therefore an Android app can provide:
-
-       window.AndroidBluetooth.connect()
-    */
-
-
-    if (
-        window.AndroidBluetooth &&
-        typeof window.AndroidBluetooth.connect === "function"
-    )
-    {
-
-        document.getElementById(
-            "connectionStatus"
-        ).innerText = "Connecting...";
-
-
-        document.getElementById(
-            "connectionDot"
-        ).classList.remove("connected");
-
-
-        window.AndroidBluetooth.connect();
-
-    }
-
-    else
-    {
-
-        document.getElementById(
-            "connectionStatus"
-        ).innerText =
-            "Android Bluetooth bridge required";
-
-
-        alert(
-            "HC-05 uses Bluetooth Classic.\n\n" +
-            "This GitHub website needs an Android Bluetooth bridge " +
-            "to communicate with HC-05."
-        );
-
-    }
-
+  logBox.scrollTop = logBox.scrollHeight;
 }
 
+// ==========================================
+// CONNECTION STATUS
+// ==========================================
 
-/* =========================================================
-   BLUETOOTH CONNECTED
-   ========================================================= */
+function setStatus(message, connected) {
+  statusBox.textContent = message;
 
-function bluetoothConnectedEvent()
-{
+  statusBox.className =
+    "status " +
+    (connected ? "connected" : "disconnected");
+}
 
-    bluetoothConnected = true;
+// ==========================================
+// CONNECT TO ESP32
+// ==========================================
 
+connectButton.addEventListener("click", async () => {
+  try {
+    if (!navigator.bluetooth) {
+      throw new Error(
+        "Web Bluetooth is unavailable. Use Chrome on Android or a supported desktop browser over HTTPS."
+      );
+    }
 
-    document.getElementById(
-        "connectionStatus"
-    ).innerText =
-        "Connected to HC-05";
+    log("Searching for Water Quality Monitor...");
 
+    bleDevice = await navigator.bluetooth.requestDevice({
+      filters: [
+        { name: "Water Quality Monitor" }
+      ],
+      optionalServices: [SERVICE_UUID]
+    });
 
-    document.getElementById(
-        "connectionDot"
-    ).classList.add("connected");
-
-
-    document.getElementById(
-        "connectButton"
-    ).innerText =
-        "HC-05 CONNECTED";
-
-
-    addHistory(
-        "Bluetooth connected to HC-05"
+    bleDevice.addEventListener(
+      "gattserverdisconnected",
+      handleDisconnect
     );
 
-}
+    log("Device selected: " + bleDevice.name);
+    setStatus("CONNECTING...", false);
 
+    const server = await bleDevice.gatt.connect();
 
-/* =========================================================
-   BLUETOOTH DISCONNECTED
-   ========================================================= */
+    log("BLE GATT connected.");
 
-function bluetoothDisconnectedEvent()
-{
+    const service =
+      await server.getPrimaryService(SERVICE_UUID);
 
-    bluetoothConnected = false;
+    log("BLE service found.");
 
+    txCharacteristic =
+      await service.getCharacteristic(TX_UUID);
 
-    document.getElementById(
-        "connectionStatus"
-    ).innerText =
-        "Disconnected";
+    log("TX characteristic found.");
 
+    await txCharacteristic.startNotifications();
 
-    document.getElementById(
-        "connectionDot"
-    ).classList.remove("connected");
-
-
-    document.getElementById(
-        "connectButton"
-    ).innerText =
-        "CONNECT BLUETOOTH";
-
-
-    addHistory(
-        "Bluetooth disconnected"
+    txCharacteristic.addEventListener(
+      "characteristicvaluechanged",
+      handleNotification
     );
 
+    setStatus("CONNECTED - WAITING FOR DATA", true);
+
+    connectButton.disabled = true;
+    disconnectButton.disabled = false;
+
+    log("Notifications enabled. Waiting for sensor readings...");
+
+  } catch (error) {
+    setStatus("CONNECTION FAILED", false);
+    log("ERROR: " + error.message);
+    console.error(error);
+  }
+});
+
+// ==========================================
+// RECEIVE BLE NOTIFICATIONS
+// ==========================================
+
+function handleNotification(event) {
+  const dataView = event.target.value;
+
+  const bytes = new Uint8Array(
+    dataView.buffer,
+    dataView.byteOffset,
+    dataView.byteLength
+  );
+
+  const message = new TextDecoder("utf-8").decode(bytes).trim();
+
+  if (!message) return;
+
+  rawData.textContent = message;
+
+  setStatus("CONNECTED - DATA RECEIVED", true);
+
+  log("BLE RX: " + message);
+
+  parseSensorData(message);
 }
 
+// ==========================================
+// PARSE ESP32 DATA
+// ==========================================
 
-/* =========================================================
-   RECEIVE BLUETOOTH DATA
-   ========================================================= */
+function parseSensorData(message) {
+  const values = {};
 
+  // Supports the complete sensor message and
+  // separate COUNT / READY / REMINDER messages.
 
-/*
-   The Android app should call:
+  message.split(",").forEach(part => {
+    const separator = part.indexOf(":");
 
-   receiveBluetoothData(
-       "COUNT:3,X:-2.1,Y:-1.8,Z:-87.4,STATUS:DRINK"
-   );
+    if (separator < 0) return;
 
+    const key = part
+      .slice(0, separator)
+      .trim()
+      .toUpperCase();
 
-   OR:
+    const value = part
+      .slice(separator + 1)
+      .trim();
 
-   receiveBluetoothData(
-       "REMINDER:DRINK WATER"
-   );
-*/
+    values[key] = value;
+  });
 
+  // Water quality
 
-function receiveBluetoothData(data)
-{
+  if (values.TDS !== undefined) {
+    document.getElementById("tds").textContent =
+      values.TDS + " ppm";
+  }
 
-    console.log(
-        "Bluetooth data:",
-        data
-    );
+  if (values.TURB !== undefined) {
+    document.getElementById("turbidity").textContent =
+      values.TURB;
+  }
 
+  if (values.TEMP !== undefined) {
+    document.getElementById("temperature").textContent =
+      values.TEMP + " °C";
+  }
 
-    /*
-       Convert data to string.
-    */
+  if (values.Q !== undefined) {
+    document.getElementById("quality").textContent =
+      values.Q;
+  }
 
-    data = String(data);
+  // MPU6050 angles
 
+  if (values.X !== undefined) {
+    document.getElementById("axisX").textContent =
+      values.X + "°";
+  }
 
-    /*
-       Remove spaces and new lines.
-    */
+  if (values.Y !== undefined) {
+    document.getElementById("axisY").textContent =
+      values.Y + "°";
+  }
 
-    data = data.trim();
+  if (values.Z !== undefined) {
+    document.getElementById("axisZ").textContent =
+      values.Z + "°";
+  }
 
+  // Drink count can arrive as DRINKS or COUNT
 
-    /*
-       Ignore empty data.
-    */
+  if (values.DRINKS !== undefined) {
+    document.getElementById("drinks").textContent =
+      values.DRINKS;
+  }
 
-    if (data.length === 0)
-    {
-        return;
-    }
+  if (values.COUNT !== undefined) {
+    document.getElementById("drinks").textContent =
+      values.COUNT;
+  }
 
+  // Status can arrive in regular data or event data
 
-    /*
-       Show latest Bluetooth data.
-    */
+  if (values.STATUS !== undefined) {
+    document.getElementById("bottleStatus").textContent =
+      values.STATUS;
+  }
 
-    document.getElementById(
-        "rawData"
-    ).innerText = data;
+  // Reminder messages
 
-
-    /*
-       Add to history.
-    */
-
-    addHistory(data);
-
-
-    /* =====================================================
-       WATER REMINDER
-       ===================================================== */
-
-    if (
-        data.includes(
-            "REMINDER:DRINK WATER"
-        )
-    )
-    {
-
-        showDrinkWaterReminder();
-
-
-        /*
-           Reset webpage timer.
-        */
-
-        resetReminderTimer();
-
-
-        return;
-
-    }
-
-
-    /* =====================================================
-       SENSOR DATA
-       ===================================================== */
-
-    if (
-        data.startsWith("COUNT:")
-    )
-    {
-
-        processSensorData(data);
-
-    }
-
+  if (values.REMINDER !== undefined) {
+    document.getElementById("reminder").textContent =
+      values.REMINDER;
+  } else if (message.startsWith("REMINDER:")) {
+    document.getElementById("reminder").textContent =
+      message.substring("REMINDER:".length).trim();
+  }
 }
 
+// ==========================================
+// DISCONNECTION
+// ==========================================
 
-/* =========================================================
-   PROCESS SENSOR DATA
-   ========================================================= */
+function handleDisconnect() {
+  setStatus("DISCONNECTED", false);
 
+  connectButton.disabled = false;
+  disconnectButton.disabled = true;
 
-/*
-   Example:
+  txCharacteristic = null;
 
-   COUNT:3,X:-2.1,Y:-1.8,Z:-87.4,STATUS:DRINK
-*/
-
-
-function processSensorData(data)
-{
-
-    let parts =
-        data.split(",");
-
-
-    let currentStatus = "";
-
-
-    let currentCount = null;
-
-
-    for (
-        let i = 0;
-        i < parts.length;
-        i++
-    )
-    {
-
-        let item =
-            parts[i].trim();
-
-
-        /* =================================================
-           COUNT
-           ================================================= */
-
-        if (
-            item.startsWith("COUNT:")
-        )
-        {
-
-            let count =
-                item.replace(
-                    "COUNT:",
-                    ""
-                );
-
-
-            currentCount =
-                parseInt(count);
-
-
-            if (!isNaN(currentCount))
-            {
-
-                document.getElementById(
-                    "drinkCount"
-                ).innerText =
-                    currentCount;
-
-            }
-
-        }
-
-
-        /* =================================================
-           X ANGLE
-           ================================================= */
-
-        else if (
-            item.startsWith("X:")
-        )
-        {
-
-            let x =
-                item.replace(
-                    "X:",
-                    ""
-                );
-
-
-            document.getElementById(
-                "angleX"
-            ).innerText =
-                x + "°";
-
-        }
-
-
-        /* =================================================
-           Y ANGLE
-           ================================================= */
-
-        else if (
-            item.startsWith("Y:")
-        )
-        {
-
-            let y =
-                item.replace(
-                    "Y:",
-                    ""
-                );
-
-
-            document.getElementById(
-                "angleY"
-            ).innerText =
-                y + "°";
-
-        }
-
-
-        /* =================================================
-           Z ANGLE
-           ================================================= */
-
-        else if (
-            item.startsWith("Z:")
-        )
-        {
-
-            let z =
-                item.replace(
-                    "Z:",
-                    ""
-                );
-
-
-            document.getElementById(
-                "angleZ"
-            ).innerText =
-                z + "°";
-
-        }
-
-
-        /* =================================================
-           STATUS
-           ================================================= */
-
-        else if (
-            item.startsWith("STATUS:")
-        )
-        {
-
-            currentStatus =
-                item.replace(
-                    "STATUS:",
-                    ""
-                );
-
-
-            updateStatus(
-                currentStatus
-            );
-
-        }
-
-    }
-
-
-    /* =====================================================
-       NEW DRINK DETECTED
-       ===================================================== */
-
-
-    if (
-        currentCount !== null &&
-        currentCount > previousDrinkCount
-    )
-    {
-
-        /*
-           A new drink was detected.
-        */
-
-        showDrinkDetected();
-
-
-        /*
-           Reset 30-minute reminder timer.
-        */
-
-        resetReminderTimer();
-
-
-        /*
-           Save new count.
-        */
-
-        previousDrinkCount =
-            currentCount;
-
-    }
-
-
-    /*
-       If the webpage starts after the Arduino already
-       has a drink count, don't show a false notification.
-    */
-
-    if (
-        previousDrinkCount === 0 &&
-        currentCount !== null
-    )
-    {
-
-        previousDrinkCount =
-            currentCount;
-
-    }
-
+  log("ESP32 disconnected.");
 }
 
+disconnectButton.addEventListener("click", () => {
+  if (bleDevice && bleDevice.gatt.connected) {
+    bleDevice.gatt.disconnect();
+  } else {
+    handleDisconnect();
+  }
+});
 
-/* =========================================================
-   UPDATE STATUS
-   ========================================================= */
+// ==========================================
+// INITIAL CHECK
+// ==========================================
 
-function updateStatus(status)
-{
+if (!navigator.bluetooth) {
+  setStatus("WEB BLUETOOTH NOT AVAILABLE", false);
 
-    let statusElement =
-        document.getElementById(
-            "status"
-        );
-
-
-    statusElement.innerText =
-        status;
-
-
-    /*
-       Remove previous classes.
-    */
-
-    statusElement.classList.remove(
-        "normal",
-        "drinkStatus",
-        "moving"
-    );
-
-
-    /*
-       Apply new class.
-    */
-
-    if (
-        status === "NORMAL"
-    )
-    {
-
-        statusElement.classList.add(
-            "normal"
-        );
-
-    }
-
-    else if (
-        status === "DRINK"
-    )
-    {
-
-        statusElement.classList.add(
-            "drinkStatus"
-        );
-
-    }
-
-    else if (
-        status === "MOVING"
-    )
-    {
-
-        statusElement.classList.add(
-            "moving"
-        );
-
-    }
-
+  log(
+    "Open this page in a supported browser using HTTPS or localhost."
+  );
 }
-
-
-/* =========================================================
-   SHOW DRINK DETECTED
-   ========================================================= */
-
-function showDrinkDetected()
-{
-
-    let message =
-        document.getElementById(
-            "drinkMessage"
-        );
-
-
-    message.style.display =
-        "block";
-
-
-    /*
-       Hide after 5 seconds.
-    */
-
-    setTimeout(
-        function()
-        {
-
-            message.style.display =
-                "none";
-
-        },
-        5000
-    );
-
-
-    /*
-       Browser notification.
-    */
-
-    showNotification(
-        "Water Drinking Detected",
-        "Your smart bottle detected that you drank water."
-    );
-
-}
-
-
-/* =========================================================
-   SHOW WATER REMINDER
-   ========================================================= */
-
-function showDrinkWaterReminder()
-{
-
-    let reminder =
-        document.getElementById(
-            "reminderMessage"
-        );
-
-
-    reminder.style.display =
-        "block";
-
-
-    /*
-       Hide after 10 seconds.
-    */
-
-    setTimeout(
-        function()
-        {
-
-            reminder.style.display =
-                "none";
-
-        },
-        10000
-    );
-
-
-    /*
-       Browser notification.
-    */
-
-    showNotification(
-        "DRINK WATER",
-        "It is time to drink water!"
-    );
-
-}
-
-
-/* =========================================================
-   BROWSER NOTIFICATION
-   ========================================================= */
-
-function showNotification(
-    title,
-    message
-)
-{
-
-    /*
-       Check browser support.
-    */
-
-    if (
-        !("Notification" in window)
-    )
-    {
-
-        return;
-
-    }
-
-
-    /*
-       Permission already granted.
-    */
-
-    if (
-        Notification.permission ===
-        "granted"
-    )
-    {
-
-        new Notification(
-            title,
-            {
-                body: message
-            }
-        );
-
-    }
-
-
-    /*
-       Ask permission.
-    */
-
-    else if (
-        Notification.permission !==
-        "denied"
-    )
-    {
-
-        Notification.requestPermission()
-        .then(
-            function(permission)
-            {
-
-                if (
-                    permission ===
-                    "granted"
-                )
-                {
-
-                    new Notification(
-                        title,
-                        {
-                            body: message
-                        }
-                    );
-
-                }
-
-            }
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   MESSAGE HISTORY
-   ========================================================= */
-
-function addHistory(message)
-{
-
-    let history =
-        document.getElementById(
-            "messageHistory"
-        );
-
-
-    /*
-       Remove "No messages yet."
-    */
-
-    if (
-        history.innerText ===
-        "No messages yet."
-    )
-    {
-
-        history.innerHTML = "";
-
-    }
-
-
-    /*
-       Create new history item.
-    */
-
-    let item =
-        document.createElement(
-            "div"
-        );
-
-
-    item.className =
-        "historyItem";
-
-
-    /*
-       Add current time.
-    */
-
-    let now =
-        new Date();
-
-
-    let time =
-        now.toLocaleTimeString();
-
-
-    item.innerText =
-        time + " → " + message;
-
-
-    /*
-       Put newest message at top.
-    */
-
-    history.prepend(item);
-
-
-    /*
-       Keep only last 20 messages.
-    */
-
-    while (
-        history.children.length > 20
-    )
-    {
-
-        history.removeChild(
-            history.lastChild
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   30 MINUTE WEBPAGE TIMER
-   ========================================================= */
-
-function startReminderTimer()
-{
-
-    /*
-       Prevent multiple timers.
-    */
-
-    if (
-        timerInterval !== null
-    )
-    {
-
-        clearInterval(
-            timerInterval
-        );
-
-    }
-
-
-    remainingSeconds =
-        REMINDER_SECONDS;
-
-
-    updateTimerDisplay();
-
-
-    timerInterval =
-        setInterval(
-            function()
-            {
-
-                remainingSeconds--;
-
-
-                if (
-                    remainingSeconds <= 0
-                )
-                {
-
-                    /*
-                       Show reminder.
-
-                       This is only a webpage timer.
-
-                       The Arduino itself also sends:
-
-                       REMINDER:DRINK WATER
-                    */
-
-                    showDrinkWaterReminder();
-
-
-                    remainingSeconds =
-                        REMINDER_SECONDS;
-
-                }
-
-
-                updateTimerDisplay();
-
-            },
-            1000
-        );
-
-}
-
-
-/* =========================================================
-   RESET WEBPAGE TIMER
-   ========================================================= */
-
-function resetReminderTimer()
-{
-
-    remainingSeconds =
-        REMINDER_SECONDS;
-
-
-    updateTimerDisplay();
-
-}
-
-
-/* =========================================================
-   DISPLAY TIMER
-   ========================================================= */
-
-function updateTimerDisplay()
-{
-
-    let minutes =
-        Math.floor(
-            remainingSeconds / 60
-        );
-
-
-    let seconds =
-        remainingSeconds % 60;
-
-
-    let minuteText =
-        String(minutes).padStart(
-            2,
-            "0"
-        );
-
-
-    let secondText =
-        String(seconds).padStart(
-            2,
-            "0"
-        );
-
-
-    document.getElementById(
-        "timer"
-    ).innerText =
-        minuteText + ":" + secondText;
-
-}
-
-
-/* =========================================================
-   TEST FUNCTIONS
-   ========================================================= */
-
-
-/*
-   You can test the webpage from browser console.
-
-   Test sensor:
-
-   receiveBluetoothData(
-       "COUNT:1,X:-2.1,Y:-1.8,Z:-87.4,STATUS:DRINK"
-   );
-
-
-   Test normal:
-
-   receiveBluetoothData(
-       "COUNT:1,X:5.2,Y:-84.1,Z:3.8,STATUS:NORMAL"
-   );
-
-
-   Test moving:
-
-   receiveBluetoothData(
-       "COUNT:1,X:20.1,Y:-30.5,Z:-50.2,STATUS:MOVING"
-   );
-
-
-   Test reminder:
-
-   receiveBluetoothData(
-       "REMINDER:DRINK WATER"
-   );
-*/
-
-
-/* =========================================================
-   START TIMER
-   ========================================================= */
-
-startReminderTimer();
-
-
-/* =========================================================
-   PAGE LOADED
-   ========================================================= */
-
-console.log(
-    "Smart Water Bottle dashboard loaded."
-);
-
-console.log(
-    "Waiting for HC-05 Bluetooth data..."
-);
-
-
 </script>
 
-
 </body>
-
 </html>
