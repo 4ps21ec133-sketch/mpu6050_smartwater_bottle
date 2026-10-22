@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#071421">
-<title>ESP32 BLE Connection Test</title>
+<title>ESP32 Water Quality Monitor</title>
 
 <style>
 * {
@@ -114,28 +114,25 @@ button:disabled {
   overflow-wrap: anywhere;
 }
 
-#rawData {
+#rawData, #log {
   background: #06101b;
   border-radius: 8px;
   padding: 12px;
-  min-height: 90px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  color: #c5f8e9;
   font-family: monospace;
+}
+
+#rawData {
+  min-height: 90px;
+  color: #c5f8e9;
   font-size: 13px;
 }
 
 #log {
-  background: #06101b;
-  border-radius: 8px;
-  padding: 12px;
   min-height: 65px;
   max-height: 180px;
   overflow-y: auto;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  font-family: monospace;
   font-size: 12px;
   color: #b7c9dc;
 }
@@ -152,8 +149,11 @@ button:disabled {
   }
 
   .grid {
-    grid-template-columns: 1fr 1fr;
     gap: 8px;
+  }
+
+  .item {
+    padding: 10px;
   }
 
   .value {
@@ -186,13 +186,14 @@ button:disabled {
   <div class="panel">
     <h3>Water Quality Readings</h3>
     <div class="grid">
+
       <div class="item">
         <div class="label">TDS</div>
         <div class="value" id="tds">--</div>
       </div>
 
       <div class="item">
-        <div class="label">Turbidity ADC</div>
+        <div class="label">Turbidity (ADC / NTU)</div>
         <div class="value" id="turbidity">--</div>
       </div>
 
@@ -205,12 +206,14 @@ button:disabled {
         <div class="label">Water Quality</div>
         <div class="value" id="quality">--</div>
       </div>
+
     </div>
   </div>
 
   <div class="panel">
     <h3>MPU6050 Readings</h3>
     <div class="grid">
+
       <div class="item">
         <div class="label">X Axis</div>
         <div class="value" id="axisX">--</div>
@@ -240,6 +243,7 @@ button:disabled {
         <div class="label">Water Reminder</div>
         <div class="value" id="reminder">--</div>
       </div>
+
     </div>
   </div>
 
@@ -274,6 +278,7 @@ const TX_UUID =
 
 let bleDevice = null;
 let txCharacteristic = null;
+let bleMessageBuffer = "";
 
 const connectButton =
   document.getElementById("connectButton");
@@ -323,7 +328,7 @@ connectButton.addEventListener("click", async () => {
   try {
     if (!navigator.bluetooth) {
       throw new Error(
-        "Web Bluetooth is unavailable. Use Chrome on Android or a supported desktop browser over HTTPS."
+        "Web Bluetooth is unavailable. Use Chrome on a supported computer or Android device over HTTPS."
       );
     }
 
@@ -341,7 +346,6 @@ connectButton.addEventListener("click", async () => {
       handleDisconnect
     );
 
-    log("Device selected: " + bleDevice.name);
     setStatus("CONNECTING...", false);
 
     const server = await bleDevice.gatt.connect();
@@ -351,12 +355,8 @@ connectButton.addEventListener("click", async () => {
     const service =
       await server.getPrimaryService(SERVICE_UUID);
 
-    log("BLE service found.");
-
     txCharacteristic =
       await service.getCharacteristic(TX_UUID);
-
-    log("TX characteristic found.");
 
     await txCharacteristic.startNotifications();
 
@@ -392,17 +392,48 @@ function handleNotification(event) {
     dataView.byteLength
   );
 
-  const message = new TextDecoder("utf-8").decode(bytes).trim();
+  const chunk = new TextDecoder("utf-8").decode(bytes);
 
-  if (!message) return;
+  // Remove line endings added after each ESP32 chunk.
+  const cleanChunk = chunk.replace(/[\r\n]/g, "");
 
-  rawData.textContent = message;
+  // Standalone event messages sent directly by ESP32
+  // do not contain the # message-ending marker.
+  if (
+    bleMessageBuffer.length === 0 &&
+    (
+      cleanChunk.startsWith("REMINDER:") ||
+      cleanChunk.startsWith("COUNT:")
+    )
+  ) {
+    rawData.textContent = cleanChunk;
+    setStatus("CONNECTED - DATA RECEIVED", true);
+    log("BLE RX: " + cleanChunk);
+    parseSensorData(cleanChunk);
+    return;
+  }
 
-  setStatus("CONNECTED - DATA RECEIVED", true);
+  // Collect chunks until the ESP32 sends its # marker.
+  bleMessageBuffer += cleanChunk;
 
-  log("BLE RX: " + message);
+  let endMarker;
 
-  parseSensorData(message);
+  while ((endMarker = bleMessageBuffer.indexOf("#")) !== -1) {
+    const message = bleMessageBuffer
+      .slice(0, endMarker)
+      .trim();
+
+    bleMessageBuffer =
+      bleMessageBuffer.slice(endMarker + 1);
+
+    if (!message) continue;
+
+    rawData.textContent = message;
+    setStatus("CONNECTED - DATA RECEIVED", true);
+    log("BLE RX: " + message);
+
+    parseSensorData(message);
+  }
 }
 
 // ==========================================
@@ -411,9 +442,6 @@ function handleNotification(event) {
 
 function parseSensorData(message) {
   const values = {};
-
-  // Supports the complete sensor message and
-  // separate COUNT / READY / REMINDER messages.
 
   message.split(",").forEach(part => {
     const separator = part.indexOf(":");
@@ -432,29 +460,56 @@ function parseSensorData(message) {
     values[key] = value;
   });
 
-  // Water quality
+  // TDS
 
   if (values.TDS !== undefined) {
     document.getElementById("tds").textContent =
       values.TDS + " ppm";
   }
 
-  if (values.TURB !== undefined) {
-    document.getElementById("turbidity").textContent =
-      values.TURB;
+  // ==========================================
+  // TURBIDITY: ADC AND NTU
+  // ESP32 fields: TURB_ADC and TURB_NTU
+  // ==========================================
+
+  const turbidityParts = [];
+
+  if (values.TURB_ADC !== undefined) {
+    turbidityParts.push(values.TURB_ADC + " ADC");
   }
+
+  if (values.TURB_NTU !== undefined) {
+    turbidityParts.push(values.TURB_NTU + " NTU");
+  }
+
+  // Support older ESP32 code using TURB.
+  if (
+    turbidityParts.length === 0 &&
+    values.TURB !== undefined
+  ) {
+    turbidityParts.push(values.TURB + " ADC");
+  }
+
+  if (turbidityParts.length > 0) {
+    document.getElementById("turbidity").textContent =
+      turbidityParts.join(" / ");
+  }
+
+  // TEMPERATURE
 
   if (values.TEMP !== undefined) {
     document.getElementById("temperature").textContent =
       values.TEMP + " °C";
   }
 
+  // WATER QUALITY
+
   if (values.Q !== undefined) {
     document.getElementById("quality").textContent =
       values.Q;
   }
 
-  // MPU6050 angles
+  // MPU6050 ANGLES
 
   if (values.X !== undefined) {
     document.getElementById("axisX").textContent =
@@ -471,7 +526,7 @@ function parseSensorData(message) {
       values.Z + "°";
   }
 
-  // Drink count can arrive as DRINKS or COUNT
+  // DRINK COUNT
 
   if (values.DRINKS !== undefined) {
     document.getElementById("drinks").textContent =
@@ -483,14 +538,14 @@ function parseSensorData(message) {
       values.COUNT;
   }
 
-  // Status can arrive in regular data or event data
+  // BOTTLE STATUS
 
   if (values.STATUS !== undefined) {
     document.getElementById("bottleStatus").textContent =
       values.STATUS;
   }
 
-  // Reminder messages
+  // WATER REMINDER
 
   if (values.REMINDER !== undefined) {
     document.getElementById("reminder").textContent =
@@ -512,6 +567,7 @@ function handleDisconnect() {
   disconnectButton.disabled = true;
 
   txCharacteristic = null;
+  bleMessageBuffer = "";
 
   log("ESP32 disconnected.");
 }
