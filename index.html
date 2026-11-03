@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,7 +7,9 @@
 <title>Smart Water Bottle Monitor</title>
 
 <style>
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
@@ -115,8 +116,13 @@ h3 {
 }
 
 @media (max-width: 360px) {
-  .value { font-size: 12px; }
-  .panel { padding: 10px; }
+  .value {
+    font-size: 12px;
+  }
+
+  .panel {
+    padding: 10px;
+  }
 }
 </style>
 </head>
@@ -127,17 +133,21 @@ h3 {
   <h1>ESP32 Water Quality Monitor</h1>
   <p class="subtitle">Water Quality + Smart Bottle</p>
 
+  <!-- Connection Status -->
   <div class="panel">
     <div id="status" class="status">
       WAITING FOR MIT APP INVENTOR DATA
     </div>
+
     <p class="note">
       Bluetooth is managed by MIT App Inventor.
     </p>
   </div>
 
+  <!-- Water Quality Readings -->
   <div class="panel">
     <h3>Water Quality Readings</h3>
+
     <div class="grid">
 
       <div class="item">
@@ -146,8 +156,8 @@ h3 {
       </div>
 
       <div class="item">
-        <div class="label">Turbidity ADC / NTU</div>
-        <div class="value" id="turbidity">--</div>
+        <div class="label">Turbidity</div>
+        <div class="value" id="turbidity">-- NTU</div>
       </div>
 
       <div class="item">
@@ -163,24 +173,11 @@ h3 {
     </div>
   </div>
 
+  <!-- Smart Bottle Activity -->
   <div class="panel">
-    <h3>MPU6050 Readings</h3>
+    <h3>Smart Bottle Activity</h3>
+
     <div class="grid">
-
-      <div class="item">
-        <div class="label">X Axis</div>
-        <div class="value" id="axisX">--</div>
-      </div>
-
-      <div class="item">
-        <div class="label">Y Axis</div>
-        <div class="value" id="axisY">--</div>
-      </div>
-
-      <div class="item">
-        <div class="label">Z Axis</div>
-        <div class="value" id="axisZ">--</div>
-      </div>
 
       <div class="item">
         <div class="label">Drink Count</div>
@@ -200,11 +197,13 @@ h3 {
     </div>
   </div>
 
+  <!-- Latest Received Message -->
   <div class="panel">
     <h3>Latest Received Message</h3>
     <div id="rawData">Waiting for data...</div>
   </div>
 
+  <!-- Connection Log -->
   <div class="panel">
     <h3>Connection Log</h3>
     <div id="log">MIT App Inventor data listener ready.</div>
@@ -218,7 +217,7 @@ h3 {
 // ==================================================
 // MIT APP INVENTOR WEBVIEWER
 // BLE connection is handled by MIT App Inventor.
-// This HTML only reads WebViewerString.
+// This HTML reads WebViewerString.
 // ==================================================
 
 let lastReceivedMessage = "";
@@ -227,6 +226,7 @@ const statusBox = document.getElementById("status");
 const rawData = document.getElementById("rawData");
 const logBox = document.getElementById("log");
 
+// Add messages to the connection log
 function log(message) {
   const time = new Date().toLocaleTimeString();
 
@@ -242,7 +242,7 @@ function log(message) {
   logBox.scrollTop = logBox.scrollHeight;
 }
 
-// Parse fields such as TDS:0,TURB_ADC:1762,TURB_NTU:0.50
+// Parse sensor data received from ESP32
 function parseSensorData(message) {
   const values = {};
 
@@ -257,7 +257,9 @@ function parseSensorData(message) {
 
     const value = part.slice(separator + 1).trim();
 
-    if (key) values[key] = value;
+    if (key) {
+      values[key] = value;
+    }
   });
 
   // TDS
@@ -266,26 +268,10 @@ function parseSensorData(message) {
       values.TDS + " ppm";
   }
 
-  // TURBIDITY: current ESP32 format
-  const turbidityParts = [];
-
-  if (values.TURB_ADC !== undefined) {
-    turbidityParts.push(values.TURB_ADC + " ADC");
-  }
-
+  // Turbidity: display NTU only
   if (values.TURB_NTU !== undefined) {
-    turbidityParts.push(values.TURB_NTU + " NTU");
-  }
-
-  // Backward compatibility with older firmware
-  if (turbidityParts.length === 0 &&
-      values.TURB !== undefined) {
-    turbidityParts.push(values.TURB + " ADC");
-  }
-
-  if (turbidityParts.length > 0) {
     document.getElementById("turbidity").textContent =
-      turbidityParts.join(" / ");
+      values.TURB_NTU + " NTU";
   }
 
   // Temperature
@@ -298,22 +284,6 @@ function parseSensorData(message) {
   if (values.Q !== undefined) {
     document.getElementById("quality").textContent =
       values.Q;
-  }
-
-  // MPU6050
-  if (values.X !== undefined) {
-    document.getElementById("axisX").textContent =
-      values.X + "°";
-  }
-
-  if (values.Y !== undefined) {
-    document.getElementById("axisY").textContent =
-      values.Y + "°";
-  }
-
-  if (values.Z !== undefined) {
-    document.getElementById("axisZ").textContent =
-      values.Z + "°";
   }
 
   // Drink count
@@ -338,8 +308,7 @@ function parseSensorData(message) {
   }
 }
 
-// Normalize the message received from App Inventor.
-// ESP32's full message may contain the # end marker.
+// Remove newlines and the ESP32 end marker
 function normalizeMessage(raw) {
   return String(raw || "")
     .replace(/[\r\n]/g, "")
@@ -347,21 +316,27 @@ function normalizeMessage(raw) {
     .trim();
 }
 
-// Read data supplied by MIT App Inventor.
+// Read data supplied by MIT App Inventor
 function readAppInventorData() {
   try {
-    if (!window.AppInventor ||
-        typeof window.AppInventor.getWebViewString !== "function") {
+    if (
+      !window.AppInventor ||
+      typeof window.AppInventor.getWebViewString !== "function"
+    ) {
       return;
     }
 
     const raw = window.AppInventor.getWebViewString();
 
-    if (raw === null || raw === undefined) return;
+    if (raw === null || raw === undefined) {
+      return;
+    }
 
     const message = normalizeMessage(raw);
 
-    if (!message || message === lastReceivedMessage) return;
+    if (!message || message === lastReceivedMessage) {
+      return;
+    }
 
     lastReceivedMessage = message;
 
@@ -377,11 +352,15 @@ function readAppInventorData() {
   }
 }
 
-// Check WebViewerString periodically for updated sensor data.
+// Check for updated sensor data every 300 milliseconds
 setInterval(readAppInventorData, 300);
 
 window.addEventListener("load", readAppInventorData);
-document.addEventListener("visibilitychange", readAppInventorData);
+
+document.addEventListener(
+  "visibilitychange",
+  readAppInventorData
+);
 
 </script>
 </body>
