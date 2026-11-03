@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -155,8 +156,15 @@ h3 {
         <div class="value" id="tds">--</div>
       </div>
 
+      <!-- Turbidity ADC -->
       <div class="item">
-        <div class="label">Turbidity</div>
+        <div class="label">Turbidity ADC</div>
+        <div class="value" id="turbidityADC">--</div>
+      </div>
+
+      <!-- Turbidity NTU -->
+      <div class="item">
+        <div class="label">Turbidity NTU</div>
         <div class="value" id="turbidity">-- NTU</div>
       </div>
 
@@ -268,7 +276,13 @@ function parseSensorData(message) {
       values.TDS + " ppm";
   }
 
-  // Turbidity: display NTU only
+  // Turbidity ADC
+  if (values.TURB_ADC !== undefined) {
+    document.getElementById("turbidityADC").textContent =
+      values.TURB_ADC;
+  }
+
+  // Turbidity NTU
   if (values.TURB_NTU !== undefined) {
     document.getElementById("turbidity").textContent =
       values.TURB_NTU + " NTU";
@@ -365,3 +379,4 @@ document.addEventListener(
 </script>
 </body>
 </html>
+```
